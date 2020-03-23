@@ -1,68 +1,66 @@
-/*
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import './App.css';
 import HelloWorld from './components/HelloWorld';
-  import Select from './components/Select';
+import Select from './components/Select';
+import CustomTable from "./Table";
 
-class App extends Component{
- 
-  state = {
+class App extends Component {
 
-    selected_value:"text",
-    select_id:"",
-    some_value:["date","datetime","email"]
+    state = {
 
-    
+        selected_value: "text",
+        select_id: "",
+        some_value: ["date", "datetime", "email"]
 
-  }
-  
-  optionChangeHandler =(e)=>{
-    console.log("this is e", e)
-    this.setState({
-
-      selected_value: e 
-      
 
     }
-  )
-  }
 
-  CallInterval =() =>{
-    console.log("intervall call")
-  }
+    optionChangeHandler = (e) => {
+        console.log("this is e", e)
+        this.setState({
+
+                selected_value: e
 
 
- render(){
-   console.log("final state",this.state)
-  return (
+            }
+        )
+    }
 
-    <div className="App">
-      <header className="App-header">
-        {  /!* <img src={logo} className="App-logo" alt="logo" />       *!/}
-         
-          <HelloWorld />
+    CallInterval = () => {
+        console.log("intervall call")
+    }
 
-          <Select select_id="type_of_input" selected_value={this.state.selected_value} some_value={this.state.some_value} 
-          changed={this.optionChangeHandler}
 
-          />
-           
-      </header>
-    </div>
-  );
+    render() {
+        console.log("final state", this.state)
+        return (
+
+            <div className="App">
+                <header className="App-header">
+                    {  /* <img src={logo} className="App-logo" alt="logo" />       */}
+
+                    <HelloWorld/>
+
+                    <Select select_id="type_of_input" selected_value={this.state.selected_value}
+                            some_value={this.state.some_value}
+                            changed={this.optionChangeHandler}
+
+                    />
+                    <div id="customTable"> <CustomTable initialStateDict = {{pageIndex: 1}} /> </div>
+
+                </header>
+            </div>
+        );
+    }
 }
-}
+
 export default App;
-*/
-
+/*
 import React from 'react'
 import styled from 'styled-components'
-import {useTable} from 'react-table'
-import Avatar, { ConfigProvider } from 'react-avatar';
-
-
-import makeData from './makeData'
-
+import {usePagination, useTable} from 'react-table'
+import Avatar, {ConfigProvider} from "react-avatar";
+import {data1} from './Data'
 const Styles = styled.div`
   padding: 1rem;
 
@@ -110,44 +108,133 @@ const Styles = styled.div`
   }
 `
 
+// Use the useTable hook to create your table configuration
+console.log("data is " + JSON.stringify(data1))
+let data = data1
 function Table({columns, data}) {
     // Use the state and functions returned from useTable to build your UI
-    const {
+    let {
         getTableProps,
         getTableBodyProps,
         headerGroups,
-        rows,
         prepareRow,
-    } = useTable({
-        columns,
-        data,
-    })
+        page, // Instead of using 'rows', we'll use page,
+        // which has only the rows for the active page
+
+        // The rest of these things are super handy, too ;)
+        canPreviousPage,
+        canNextPage,
+        pageOptions,
+        pageCount,
+        gotoPage,
+        nextPage,
+        previousPage,
+        setPageSize,
+        state: {pageIndex, pageSize},
+    } = useTable(
+        {
+            columns,
+            data,
+            initialState: {pageIndex: 2},
+        },
+        usePagination
+    )
+    pageIndex=0
 
     // Render the UI for your table
     return (
-        <table {...getTableProps()}>
-            <thead>
-            {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                        <th {...column.getHeaderProps()}>{column.render('Header')}</th>
-                    ))}
-                </tr>
-            ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-            {rows.map((row, i) => {
-                prepareRow(row)
-                return (
-                    <tr {...row.getRowProps()}>
-                        {row.cells.map(cell => {
-                            return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                        })}
+        <>
+      <pre>
+        <code>
+          {JSON.stringify(
+              {
+                  pageIndex,
+                  pageSize,
+                  pageCount,
+                  canNextPage,
+                  canPreviousPage,
+              },
+              null,
+              2
+          )}
+        </code>
+      </pre>
+            <table {...getTableProps()}>
+                <thead>
+                {headerGroups.map(headerGroup => (
+                    <tr {...headerGroup.getHeaderGroupProps()}>
+                        {headerGroup.headers.map(column => (
+                            <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+                        ))}
                     </tr>
-                )
-            })}
-            </tbody>
-        </table>
+                ))}
+                </thead>
+                <tbody {...getTableBodyProps()}>
+                {page.map((row, i) => {
+                    prepareRow(row)
+                    return (
+                        <tr {...row.getRowProps()}>
+                            {row.cells.map(cell => {
+                                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                            })}
+                        </tr>
+                    )
+                })}
+                </tbody>
+            </table>
+            {/!*
+        Pagination can be built however you'd like.
+        This is just a very basic UI implementation:
+      *!/}
+            <div className="pagination">
+                <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                    {'<<'}
+                </button>
+                {' '}
+                <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+                    {'<'}
+                </button>
+                {' '}
+                <button onClick={() => nextPage()} disabled={!canNextPage}>
+                    {'>'}
+                </button>
+                {' '}
+                <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+                    {'>>'}
+                </button>
+                {' '}
+                <span>
+          Page{' '}
+                    <strong>
+            {pageIndex + 1} of {pageOptions.length}
+          </strong>{' '}
+        </span>
+                <span>
+          | Go to page:{' '}
+                    <input
+                        type="number"
+                        defaultValue={pageIndex + 1}
+                        onChange={e => {
+                            const page = e.target.value ? Number(e.target.value) - 1 : 0
+                            gotoPage(page)
+                        }}
+                        style={{width: '100px'}}
+                    />
+        </span>{' '}
+                <select
+                    value={pageSize}
+                    onChange={e => {
+                        setPageSize(Number(e.target.value))
+                    }}
+                >
+                    {[10, 20, 30, 40, 50].map(pageSize => (
+                        <option key={pageSize} value={pageSize}>
+                            Show {pageSize}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        </>
     )
 }
 
@@ -162,7 +249,10 @@ let mainContentStyle = {
 
 let colors = ['black', 'green', 'blue']
 
+
 function App() {
+
+
     const columns = [
         {
             Header: '',
@@ -170,21 +260,24 @@ function App() {
             Cell: ({row}) => {
                 return (
                     <div>
-                        <span className="class-for-name" style={{height: "16px"}}><ConfigProvider colors={colors}><Avatar name={row.original.candidateName} size="30" round={true}/></ConfigProvider></span>
+                            <span className="class-for-name" style={{height: "16px"}}><ConfigProvider
+                                colors={colors}><Avatar name={row.original.candidateName} size="30"
+                                                        round={true}/></ConfigProvider></span>
                     </div>
                 )
             }
         },
         {
-            /*Header: ' ',
+            /!*Header: ' ',
             columns: [
-                {*/
+                {*!/
             Header: 'Candidate',
             accessor: 'candidateName',
             Cell: ({row}) => {
                 return (
                     <div>
-                        <span className="class-for-name" style={{height: "16px"}}>{row.original.candidateName}</span>
+                            <span className="class-for-name"
+                                  style={{height: "16px"}}>{row.original.candidateName}</span>
                         <br></br>
                         <span className="class-for-description"
                               style={{color: "#909090"}}>{row.original.candidateEmail}</span>
@@ -207,8 +300,9 @@ function App() {
             Cell: ({row}) => {
                 return (
                     <div>
-                        <span onMouseOver={() => {console.log("henlo")
-                        }} className="class-for-name" style={{height: "16px"}}>{row.original.organization}</span>
+                            <span onMouseOver={() => {
+                                console.log("henlo")
+                            }} className="class-for-name" style={{height: "16px"}}>{row.original.organization}</span>
                         <br></br>
                         <span className="class-for-description"
                               style={{color: "#909090"}}>{row.original.organization}</span>
@@ -254,141 +348,18 @@ function App() {
         },
     ]
 
-    /*const data = React.useMemo(() => makeData(20), [])*/
-    const data = [{
-        candidateName : "Lillian Bennet",
-        candidateEmail : "lillianben@yahoo.com",
-        candidateId : "#782475",
-        organization: "HCL Technologies",
-        organizationId: "#245" ,
-        assessment: "Javascript Developer",
-        assessmentId: "#23554",
-        createdDate : "5 days ago",
-        externalId: "H28477",
-        lastActivity : "Invited for Assessment",
-        lastActivityDate : "2 days ago",
-        profileImage : "hello"
+    /!*const data = React.useMemo(() => makeData(20), [])*!/
 
-    },
-        {
-            candidateName : "Nathan Reed",
-            candidateEmail : "nathan.reed@yahoo.com",
-            candidateId : "#647634",
-            organization: "Cognizant",
-            organizationId: "#333" ,
-            assessment: "Asynchronous",
-            assessmentId: "#87587",
-            createdDate : "12 days ago",
-            externalId: "C112322",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "5 days ago"
-
-        },
-        {
-            candidateName : "Wasim Ekram",
-            candidateEmail : "lillianben@yahoo.com",
-            candidateId : "#782475",
-            organization: "HCL Technologies",
-            organizationId: "#245" ,
-            assessment: "Javascript Developer",
-            assessmentId: "#23554",
-            createdDate : "5 days ago",
-            externalId: "H28477",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "2 days ago"
-
-        },
-        {
-            candidateName : "Shresht Juneja",
-            candidateEmail : "lillianben@yahoo.com",
-            candidateId : "#782475",
-            organization: "HCL Technologies",
-            organizationId: "#245" ,
-            assessment: "Javascript Developer",
-            assessmentId: "#23554",
-            createdDate : "5 days ago",
-            externalId: "H28477",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "2 days ago"
-
-        },
-        {
-            candidateName : "Nathan Reed",
-            candidateEmail : "nathan.reed@yahoo.com",
-            candidateId : "#647634",
-            organization: "Cognizant",
-            organizationId: "#333" ,
-            assessment: "Asynchronous",
-            assessmentId: "#87587",
-            createdDate : "12 days ago",
-            externalId: "C112322",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "5 days ago"
-
-        },{
-            candidateName : "Lillian Bennet",
-            candidateEmail : "lillianben@yahoo.com",
-            candidateId : "#782475",
-            organization: "HCL Technologies",
-            organizationId: "#245" ,
-            assessment: "Javascript Developer",
-            assessmentId: "#23554",
-            createdDate : "5 days ago",
-            externalId: "H28477",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "2 days ago"
-
-        },
-        {
-            candidateName : "Nathan Reed",
-            candidateEmail : "nathan.reed@yahoo.com",
-            candidateId : "#647634",
-            organization: "Cognizant",
-            organizationId: "#333" ,
-            assessment: "Asynchronous",
-            assessmentId: "#87587",
-            createdDate : "12 days ago",
-            externalId: "C112322",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "5 days ago"
-
-        },{
-            candidateName : "Lillian Bennet",
-            candidateEmail : "lillianben@yahoo.com",
-            candidateId : "#782475",
-            organization: "HCL Technologies",
-            organizationId: "#245" ,
-            assessment: "Javascript Developer",
-            assessmentId: "#23554",
-            createdDate : "5 days ago",
-            externalId: "H28477",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "2 days ago"
-
-        },
-        {
-            candidateName : "Nathan Reed",
-            candidateEmail : "nathan.reed@yahoo.com",
-            candidateId : "#647634",
-            organization: "Cognizant",
-            organizationId: "#333" ,
-            assessment: "Asynchronous",
-            assessmentId: "#87587",
-            createdDate : "12 days ago",
-            externalId: "C112322",
-            lastActivity : "Invited for Assessment",
-            lastActivityDate : "5 days ago"
-
-        }]
 
     return (
         <Styles>
-            <Table columns={columns} data={data}/>
+            <Table columns={columns} data={data} pageIndex={0}/>
         </Styles>
     )
 }
 
-export default App
+export default App*/
+
 
 /*
 import React from 'react'
@@ -398,103 +369,103 @@ import EnhancedTable from './components/EnhancedTable'
 import makeData from './makeData'
 
 const App = () => {
-    const columns = React.useMemo(
-        () => [
-            /!*{
-                Header: 'First Name',
-                accessor: 'firstName',
-            },
-            {
-                Header: 'Last Name',
-                accessor: 'lastName',
-            },
-            {
-                Header: 'Age',
-                accessor: 'age',
-            },
-            {
-                Header: 'Visits',
-                accessor: 'visits',
-            },
-            {
-                Header: 'Status',
-                accessor: 'status',
-            },
-            {
-                Header: 'Profile Progress',
-                accessor: 'progress',
-            },*!/
-            {
-                Header: 'Candidate',
-                accessor: 'candidateName',
-            },
-            {
-                Header: 'Candidate ID',
-                accessor: 'candidateId',
-            },
-            {
-                Header: 'Organization',
-                accessor: 'organization',
-            },
-            {
-                Header: 'Assessment',
-                accessor: 'assessment',
-            },
-            {
-                Header: 'Created Date',
-                accessor: 'createdDate',
-            },
-            {
-                Header: 'External ID',
-                accessor: 'externalId',
-            },
-            {
-                Header: 'Last Activity',
-                accessor: 'lastActivity',
-            },
-        ],
-        []
-    )
+const columns = React.useMemo(
+() => [
+/!*{
+Header: 'First Name',
+accessor: 'firstName',
+},
+{
+    Header: 'Last Name',
+    accessor: 'lastName',
+},
+{
+    Header: 'Age',
+    accessor: 'age',
+},
+{
+    Header: 'Visits',
+    accessor: 'visits',
+},
+{
+    Header: 'Status',
+    accessor: 'status',
+},
+{
+    Header: 'Profile Progress',
+    accessor: 'progress',
+},*!/
+{
+    Header: 'Candidate',
+    accessor: 'candidateName',
+},
+{
+    Header: 'Candidate ID',
+    accessor: 'candidateId',
+},
+{
+    Header: 'Organization',
+    accessor: 'organization',
+},
+{
+    Header: 'Assessment',
+    accessor: 'assessment',
+},
+{
+    Header: 'Created Date',
+    accessor: 'createdDate',
+},
+{
+    Header: 'External ID',
+    accessor: 'externalId',
+},
+{
+    Header: 'Last Activity',
+    accessor: 'lastActivity',
+},
+],
+[]
+)
 
-    const [data, setData] = React.useState(React.useMemo(() => makeData(40), []))
-    const [skipPageReset, setSkipPageReset] = React.useState(false)
+const [data, setData] = React.useState(React.useMemo(() => makeData(40), []))
+const [skipPageReset, setSkipPageReset] = React.useState(false)
 
-    // We need to keep the table from resetting the pageIndex when we
-    // Update data. So we can keep track of that flag with a ref.
+// We need to keep the table from resetting the pageIndex when we
+// Update data. So we can keep track of that flag with a ref.
 
-    // When our cell renderer calls updateMyData, we'll use
-    // the rowIndex, columnId and new value to update the
-    // original data
-    const updateMyData = (rowIndex, columnId, value) => {
-        // We also turn on the flag to not reset the page
-        setSkipPageReset(true)
-        setData(old =>
-            old.map((row, index) => {
-                if (index === rowIndex) {
-                    return {
-                        ...old[rowIndex],
-                        [columnId]: value,
-                    }
-                }
-                return row
-            })
+// When our cell renderer calls updateMyData, we'll use
+// the rowIndex, columnId and new value to update the
+// original data
+const updateMyData = (rowIndex, columnId, value) => {
+// We also turn on the flag to not reset the page
+setSkipPageReset(true)
+setData(old =>
+old.map((row, index) => {
+if (index === rowIndex) {
+return {
+...old[rowIndex],
+[columnId]: value,
+}
+}
+return row
+})
+)
+}
+
+return (
+<div>
+    {/!*<CssBaseline / > * !/}
+        <EnhancedTable
+        columns={columns}
+        data={data}
+        setData={setData}
+        updateMyData={updateMyData}
+        skipPageReset={skipPageReset}
+        />
+        </div>
         )
     }
 
-    return (
-        <div>
-            {/!*<CssBaseline />*!/}
-            <EnhancedTable
-                columns={columns}
-                data={data}
-                setData={setData}
-                updateMyData={updateMyData}
-                skipPageReset={skipPageReset}
-            />
-        </div>
-    )
-}
+    export default App
 
-export default App
-
-*/
+    */
